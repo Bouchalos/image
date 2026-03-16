@@ -1,5 +1,5 @@
-FROM alpine
+FROM alpine:3.18
 
-RUN apk add gcc make git linux-headers musl-dev
+RUN apk add --no-cache curl
 
-RUN git clone https://github.com/HewlettPackard/wireless-tools/ && cd wireless-tools/wireless_tools && make CFLAGS='-Wno-error -Wno-implicit-function-declaration -Wno-int-conversion'
+CMD ["echo", "DevSecOps"]
