@@ -1,26 +1,20 @@
-## Scan a docker image -> get a SARIF/SBOM report
-
 name: SBOM/SCA Scout
 
 on:
   workflow_dispatch:
     inputs:
-        docker_image:
-          description: 'The Docker image to scan'
-          required: true
-          default: 'ghcr.io/bouchalos/image:latest'
-
-# env:
-#   REGISTRY: ghcr.io
-#   IMAGE_NAME: ${{ github.repository }}
-#   SHA: ${{ github.event.pull_request.head.sha || github.event.after }}
+      docker_image:
+        description: 'The Docker image to scan'
+        required: true
+        default: 'ghcr.io/bouchalos/image:latest'
 
 jobs:
   scout:
     runs-on: ubuntu-latest
+
     permissions:
-      contents: write
-      packages: write
+      contents: read
+      packages: read
       security-events: write
 
     steps:
@@ -34,8 +28,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-
-      # Pull the github input image or use the default
       - name: Pull the image
         run: docker pull ${{ github.event.inputs.docker_image }}
 
@@ -44,9 +36,7 @@ jobs:
         with:
           command: cves,recommendations,compare,sbom
           image: ${{ github.event.inputs.docker_image }}
-          #only-severities: critical,high # only show critical and high CVEs
-          #only-fixed: true # filter to fixed CVEs
-          exit-code: false  # fail or not based on CVEs found?
+          exit-code: false
           sarif-file: sca_scout.sarif
           output: sbom_scout.spdx.json
           format: spdx
@@ -54,16 +44,15 @@ jobs:
       - name: Upload SBOM file as an artifact
         uses: actions/upload-artifact@v4
         with:
-          name: sbom_scout.spdx.json
+          name: sbom_scout
           path: sbom_scout.spdx.json
 
       - name: Upload SARIF file as an artifact
         uses: actions/upload-artifact@v4
         with:
-          name: sca_scout.sarif
+          name: sarif_report
           path: sca_scout.sarif
 
-      # Only available on Github Enterprise or public repositories
       - name: Upload SARIF file
         uses: github/codeql-action/upload-sarif@v3
         with:
